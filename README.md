@@ -1,4 +1,4 @@
-# longdist.py
+# longdist
 
 ## Requirements
 
@@ -16,9 +16,9 @@ These packages will be automatically installed during the installation process
 ## Instalation
 
 ```
-wget https://github.com/hugowschneider/longdist.py/archive/v1.0.0.tar.gz
+wget https://github.com/hugowschneider/longdist/archive/v1.0.0.tar.gz
 tar zxvf v1.0.0.tar.gz
-cd longdist.py-1.0.0
+cd longdist-1.0.0
 pip install .
 ```
 
@@ -90,7 +90,7 @@ long noncoding RNAs (``test/GRCm38.lncRNA.fa``) and other containing protein cod
 (``test/GRCm38.pct.fa``):
 
 ```
-longdist.py --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pcts.fa
+longdist --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pcts.fa
 ```
 
 This command line will build a model with 50 nucleotide patterns frequencies (kmers)
@@ -98,21 +98,21 @@ and the first ORF relative length. To change the number of kmers, should be incl
 the parameter ``--kmers``, for example:
 
 ```
-longdist.py --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pcts.fa --kmers 10
+longdist --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pcts.fa --kmers 10
 ```
 
 It is also possible to change the training data ratio for building the model with
 the parameter ``--ratio``, for example:
 
 ```
-longdist.py --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pcts.fa --ratio 0.5
+longdist --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pcts.fa --ratio 0.5
 ```
 
 The paramenters ``--log2c`` and ``--log2g`` changes the search space for the C and
 gamma parameter, for example:
 
 ```
-longdist.py --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pcts.fa --log2c 1,15,2 --log2g 3,-1,-1
+longdist --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pcts.fa --log2c 1,15,2 --log2g 3,-1,-1
 ```
 
 The model build process creates intermediate files to accelerate the build of the
@@ -132,7 +132,7 @@ To distinguish PCTs and lncRNAs from a input fasta file (``input.fa``) using a p
 model (``model.plk.conf``), the following command should be used:
 
 ```
-longdist.py --predict --input input.fa --model_config model.plk.conf
+longdist --predict --input input.fa --model_config model.plk.conf
 ```
 
 This command will create a csv file named ``input.fa.csv`` with the prediction results.
