@@ -90,7 +90,7 @@ long noncoding RNAs (``test/GRCm38.lncRNA.fa``) and other containing protein cod
 (``test/GRCm38.pct.fa``):
 
 ```
-longdist --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pcts.fa
+longdist --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pct.fa
 ```
 
 This command line will build a model with 50 nucleotide patterns frequencies (kmers)
@@ -98,21 +98,21 @@ and the first ORF relative length. To change the number of kmers, should be incl
 the parameter ``--kmers``, for example:
 
 ```
-longdist --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pcts.fa --kmers 10
+longdist --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pct.fa --kmers 10
 ```
 
 It is also possible to change the training data ratio for building the model with
 the parameter ``--ratio``, for example:
 
 ```
-longdist --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pcts.fa --ratio 0.5
+longdist --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pct.fa --ratio 0.5
 ```
 
 The paramenters ``--log2c`` and ``--log2g`` changes the search space for the C and
 gamma parameter, for example:
 
 ```
-longdist --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pcts.fa --log2c 1,15,2 --log2g 3,-1,-1
+longdist --longs test/GRCm38.lncRNA.fa --pcts test/GRCm38.pct.fa --log2c 1,15,2 --log2g 3,-1,-1
 ```
 
 The model build process creates intermediate files to accelerate the build of the
