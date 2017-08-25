@@ -19,6 +19,9 @@ cd longdist.py-1.0.0
 pip install .
 ```
 
+If you install these package in a local repository, please remember to set the ``PYTHONPATH``
+and ``PATH`` environment variables correctly.
+
 ## Usage
 ```
 Method implementation for long ncRNAs and PCT distinction. This
