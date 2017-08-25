@@ -2,7 +2,7 @@
 
 ## Instalation
 
-Python and pip are required for running this tool and the following packages installed:
+Python, Tkinter and pip are required for running this tool and the following packages installed:
 - NumPy - ``pip install numpy``
 - Biopython - ``pip instal biopython``
 - scipy - ``pip install scipy``
