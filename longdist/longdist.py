@@ -3,7 +3,7 @@
 
 """bootstrap.bootstrap: provides entry point main()."""
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 from argparse import ArgumentParser
 from .sequence_attributes import SequenceAttributes
@@ -39,8 +39,8 @@ def main():
     group.add_argument('--kmers', nargs=1, metavar='<50>', default=50, type=int, dest='kmers',
                        help='Number of nucleotide pattern frequencies to consider in the model. Default is 50.')
 
-    group.add_argument('--fraction', nargs=1, metavar='<0.75>', default=0.75, type=float, dest='fraction',
-                       help='Fraction of whole dataset that should be used for training. Default is 0.75.')
+    group.add_argument('--ratio', nargs=1, metavar='<0.75>', default=0.75, type=float, dest='fraction',
+                       help='The ratio of whole dataset that should be used for training. Default is 0.75.')
 
     group.add_argument('--size', nargs=1, metavar='<200>', default=200, type=int, dest='size',
                        help='Mininum sequence size to consider. Default is 200.')
@@ -56,20 +56,20 @@ def main():
     group.add_argument('--processes', nargs=1, metavar='<5>', default=4, type=int,
                        help='Number of parallel processes for parameters search. Default is 4.')
 
-    group.add_argument('--out_roc', nargs=1, metavar='<"Fasta file"x"PCT file"x"kmers"_roc.eps>', dest='roc_file',
+    group.add_argument('--out_roc', nargs=1, metavar='<"lncRNA file"x"PCT file"x"kmers"_roc.eps>', dest='roc_file',
                        help='Name of the output file for the roc Curve. Default is roc.eps.')
 
-    group.add_argument('--out_csv', nargs=1, metavar='<"Fasta file"x"PCT file"x"kmers".csv>', dest='csv_file',
+    group.add_argument('--out_csv', nargs=1, metavar='<"lncRNA file"x"PCT file"x"kmers".csv>', dest='csv_file',
                        help='Name of the output CSV file containg the results. Default is a name built from the names of both fasta files.')
 
-    group.add_argument('--out_model', nargs=1, metavar='<"Fasta file"x"PCT file"x"kmers".plk>',
+    group.add_argument('--out_model', nargs=1, metavar='<"lncRNA file"x"PCT file"x"kmers".plk>',
                        dest='model_file',
                        help='Name of the output file containg the SVM Model. Default is a name built from the names of both fasta files.')
 
     group.add_argument('--predict', action="store_true",
                        help='Just use a predefined model to distinguish long ncRNAs and PCTs in the input fasta file')
 
-    group.add_argument('--model_config', nargs=1, metavar='<"Fasta file"x"PCT file"x"kmers".plk>',
+    group.add_argument('--model_config', nargs=1, metavar='<"lncRNA file"x"PCT file"x"kmers".plk>',
                        dest='model_config',
                        help='The file name containg the model configuration properties for prediction.')
 
@@ -111,7 +111,7 @@ def predict(args):
     config = configparser.ConfigParser()
     config.read(args.model_config[0])
     kmers = eval(config['MODEL']['attributes'])
-    input = SequenceAttributes(input_file=args.input[0], size=args.size, clazz=-1, intermediate_file=False)
+    input = SequenceAttributes(input_file=args.input[0], size=args.size, clazz=-1, use_intermediate_file=False)
     input.process(kmers)
 
     clf = joblib.load(os.path.join(os.path.split(args.model_config[0])[0],config['MODEL']['model']))
@@ -208,8 +208,8 @@ def create_model(args):
 
 
 def purge(files):
-    pass
-
+    for f in files:
+        os.remove(f)
 
 def roc(false_positive_rate, true_positive_rate, label, title, file_name):
     fig, ax = plt.subplots()

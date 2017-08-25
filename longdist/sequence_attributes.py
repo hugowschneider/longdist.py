@@ -350,18 +350,18 @@ class SequenceAttributes:
         "tttt"
     ]
 
-    def __init__(self, input_file, size, clazz, intermediate_file=True):
+    def __init__(self, input_file, size, clazz, use_intermediate_file=True):
         self.fasta_file = input_file
         self.size = size
         self.clazz = clazz
-        self.intermediate_file = intermediate_file
+        self.use_intermediate_file = use_intermediate_file
 
     def intermediate_file(self):
         return self.LONGDIST_NPY % self.fasta_file
 
     def process(self, patterns=ALL_PATTERNS):
 
-        if self.intermediate_file and os.path.exists(self.LONGDIST_NPY % self.fasta_file):
+        if self.use_intermediate_file and os.path.exists(self.LONGDIST_NPY % self.fasta_file):
             self.data = np.load(self.intermediate_file())
             return self.data
 
@@ -375,7 +375,7 @@ class SequenceAttributes:
             [("id", np.str_, 32), ("class", np.int_), ("length", np.int_)] + [(pattern, np.float_) for pattern in
                                                                               patterns])
         self.data = np.asarray(np.array(data, dtype=dt))
-        if self.intermediate_file:
+        if self.use_intermediate_file:
             self.dump()
 
         return self.data
