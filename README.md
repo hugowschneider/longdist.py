@@ -68,7 +68,7 @@ Method Paramenters:
                         second time with the same data
 
 ```
-###Building Models
+### Building Models
 
 The following command builds a model with data from two fasta files, one containing
 long noncoding RNAs (``test/GRCm38.lncRNA.fa``) and other containing protein coding
