@@ -22,12 +22,12 @@ setup(
         "console_scripts": ['longdist = longdist.longdist:main']
     },
     install_requires=[
-        'biopython', 'numpy', 'scikit-learn'
+        'biopython', 'scipy', 'numpy', 'scikit-learn'
     ],
     version=version,
     description="longdist: Method implementation for long ncRNAs and PCT distinction. This application can create and use models base on the method by Schneider et al (2017).",
     long_description=long_descr,
     author="Hugo Wruck Schneider",
     author_email="hugowschneider@gmail.com",
-    url="http://gehrcke.de/2014/02/distributing-a-python-command-line-application",
+    url="https://github.com/hugowschneider/longdist.py",
 )
