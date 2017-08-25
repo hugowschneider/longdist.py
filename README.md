@@ -1,4 +1,4 @@
-# long-predict
+# longdist.py
 
 
 ## Instalation
