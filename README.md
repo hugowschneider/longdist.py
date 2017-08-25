@@ -1,6 +1,6 @@
 # longdist.py
 
-## Instalation
+## Requirements
 
 Python, Tkinter and pip are required for running this tool. Also the the
 following packages will be installed during the installation process:
