@@ -3,10 +3,12 @@
 ## Instalation
 
 Python and pip are required for running this tool and the following packages installed:
-- NumPy - ``pip install numpy``)
-- Biopython - ``pip instal biopython``)
-- scipy - ``pip install scipy``)
-- scikit-learn - ``pip install scikit-learn``)
+- NumPy - ``pip install numpy``
+- Biopython - ``pip instal biopython``
+- scipy - ``pip install scipy``
+- scikit-learn - ``pip install scikit-learn``
+
+These packages will be automatically installed during the installation process
 
 ## Instalation
 
