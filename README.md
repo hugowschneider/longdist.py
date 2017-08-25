@@ -2,11 +2,14 @@
 
 ## Instalation
 
-Python, Tkinter and pip are required for running this tool and the following packages installed:
+Python, Tkinter and pip are required for running this tool. Also the the
+following packages will be installed during the installation process:
 - NumPy - ``pip install numpy``
 - Biopython - ``pip instal biopython``
 - scipy - ``pip install scipy``
 - scikit-learn - ``pip install scikit-learn``
+- configparser - ``pip install configparser``
+- matplotlib - ``pip install matplotlib``
 
 These packages will be automatically installed during the installation process
 
