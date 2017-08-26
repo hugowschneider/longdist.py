@@ -22,7 +22,7 @@ setup(
         "console_scripts": ['longdist = longdist.longdist:main']
     },
     install_requires=[
-        'biopython', 'scipy', 'numpy', 'scikit-learn', 'matplotlib', 'configparser'
+        'biopython', 'scipy', 'numpy', 'scikit-learn', 'matplotlib', 'configparser', 'sklearn'
     ],
     version=version,
     description="longdist: Method implementation for long ncRNAs and PCT distinction. This application can create and use models base on the method by Schneider et al (2017).",

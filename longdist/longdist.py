@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
+"""longdist.longdist: provides entry point main()."""
 
-"""bootstrap.bootstrap: provides entry point main()."""
-
-__version__ = "1.0.0"
+import os
+import csv
+import numpy as npy
+import configparser
+import matplotlib.pyplot as plt
 
 from argparse import ArgumentParser
 from .sequence_attributes import SequenceAttributes
-import numpy as npy
 from sklearn import svm
 from sklearn.model_selection import cross_val_score
 from .pca_attributes import PCAAttributes
@@ -15,24 +17,27 @@ from multiprocessing import Pool
 from math import floor
 from sklearn import metrics
 from sklearn.externals import joblib
-import os
-import csv
-import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
-import configparser
+
+__version__ = "1.0.0"
 
 
 def main():
     parser = ArgumentParser(
-        description='longdist: Method implementation for long ncRNAs and PCT distinction. This application can create and use models base on the method by Schneider et al (2017).')
+        description='longdist: Method implementation for long ncRNAs and PCT distinction. This application can create '
+                    'and use models base on the method by Schneider et al (2017).')
     parser.add_argument('--citation', action='store_true', help='Prints bibtex citation.')
     parser.add_argument('--version', action='store_true', help='Prints version number.')
     group = parser.add_argument_group("Method Paramenters")
-    group.add_argument('--longs', nargs=1, metavar='<longs.fa>', dest='longs',
-                       help='Fasta file containing only long non-coding RNAs. This argument is required.')
-    group.add_argument('--pcts', nargs=1, metavar='<pcts.fa>', dest='pcts',
-                       help='Fasta file containing only protein coding transcripts. This argument is required.')
+    group.add_argument('--longs', metavar='<longs1.fa longs2.fa ...>', dest='longs', nargs='+',
+                       help='List of fasta files containing long non-coding RNAs. The files should the separated by '
+                            'spaces and should be ordered by species in same order as the pct file list. This '
+                            'argument is required.')
+    group.add_argument('--pcts', metavar='<pcts1.fa pcts2.fa ...>', dest='pcts', nargs='+',
+                       help='List of fasta files containing protein coding transcripts. The files should the '
+                            'separated by spaces and should be ordered by species in same order as the lcnRNA file '
+                            'list. This argument is required.')
     group.add_argument('--input', nargs=1, metavar='<input.fa>', dest='input',
                        help='Fasta file containing transcripts to predict with the model')
 
@@ -60,11 +65,13 @@ def main():
                        help='Name of the output file for the roc Curve. Default is roc.eps.')
 
     group.add_argument('--out_csv', nargs=1, metavar='<"lncRNA file"x"PCT file"x"kmers".csv>', dest='csv_file',
-                       help='Name of the output CSV file containg the results. Default is a name built from the names of both fasta files.')
+                       help='Name of the output CSV file containg the results. Default is a name built from the names '
+                            'of both fasta files.')
 
     group.add_argument('--out_model', nargs=1, metavar='<"lncRNA file"x"PCT file"x"kmers".plk>',
                        dest='model_file',
-                       help='Name of the output file containg the SVM Model. Default is a name built from the names of both fasta files.')
+                       help='Name of the output file containg the SVM Model. Default is a name built from the names '
+                            'of both fasta files.')
 
     group.add_argument('--predict', action="store_true",
                        help='Just use a predefined model to distinguish long ncRNAs and PCTs in the input fasta file')
@@ -85,11 +92,9 @@ def main():
     args = parser.parse_args()
 
     if args.citation:
-        print("""@artile {Schneider:2017,
-         title={A Support Vector Machine based method to distinguish long non-coding RNAs from protein coding transcripts},
-         author={Schneider, Hugo and Raiol, Tainá and Brígido, Marcelo and Walter, Maria E. M. T. and Stadler, Peter },
-         year={2017}
-}""")
+        print("""@artile {Schneider:2017, title={A Support Vector Machine based method to distinguish long non-coding 
+        RNAs from protein coding transcripts}, author={Schneider, Hugo and Raiol, Tainá and Brígido, Marcelo and 
+        Walter, Maria E. M. T. and Stadler, Peter }, year={2017} }""")
     elif args.version:
         print(parser.description)
         print("Version: %s" % __version__)
@@ -111,39 +116,57 @@ def predict(args):
     config = configparser.ConfigParser()
     config.read(args.model_config[0])
     kmers = eval(config['MODEL']['attributes'])
-    input = SequenceAttributes(input_file=args.input[0], size=args.size, clazz=-1, use_intermediate_file=False)
-    input.process(kmers)
+    fasta_input = SequenceAttributes(input_file=args.input[0], size=args.size, clazz=-1, use_intermediate_file=False)
+    fasta_input.process(kmers)
 
-    clf = joblib.load(os.path.join(os.path.split(args.model_config[0])[0],config['MODEL']['model']))
+    clf = joblib.load(os.path.join(os.path.split(args.model_config[0])[0], config['MODEL']['model']))
 
-    X = input.data[npy.array(kmers)].copy(npy.float_).reshape(input.data.shape + (-1,))
+    x = fasta_input.data[npy.array(kmers)].copy(npy.float_).reshape(fasta_input.data.shape + (-1,))
 
-    probabilities = clf.predict_proba(X)
+    probabilities = clf.predict_proba(x)
 
-    csv_file = args.output if args.output else "%s.csv" % args.input[0]
+    csv_file = args.output[0] if args.output else "%s.csv" % args.input[0]
 
-    dump_result_csv(input.data["id"], probabilities[:, 1], probabilities[:, 0], csv_file)
+    dump_result_csv(fasta_input.data["id"], probabilities[:, 1], probabilities[:, 0], csv_file)
 
     if args.purge:
-        purge([input.intermediate_file()])
+        purge([fasta_input.intermediate_file()])
 
 
 def create_model(args):
-    longs = SequenceAttributes(input_file=args.longs[0], size=args.size, clazz=1)
-    pcts = SequenceAttributes(input_file=args.pcts[0], size=args.size, clazz=0)
+    longs = []
+    pcts = []
     print("Processing fasta files. This could take some minutes... (if you don't have some intermediate files)")
-    print("Processing long non-coding RNA fasta file...")
-    longs.process()
-    print("Processing proteing coding transcripts fasta file...")
-    pcts.process()
 
-    min_size = min([len(longs.data), len(pcts.data)])
+    training = None
+    testing = None
 
-    longs_data_training, longs_data_testing = section(longs.data, min_size, args.fraction)
-    pcts_data_training, pcts_data_testing = section(pcts.data, min_size, args.fraction)
+    for (long, pct) in zip(args.longs, args.pcts):
+        l = SequenceAttributes(input_file=long, size=args.size, clazz=1)
+        p = SequenceAttributes(input_file=pct, size=args.size, clazz=0)
 
-    training = npy.hstack((longs_data_training, pcts_data_training))
-    testing = npy.hstack((longs_data_testing, pcts_data_testing))
+        longs.append(l)
+        pcts.append(p)
+
+        print("Processing long non-coding RNA fasta file '%s'..." % long)
+        l.process()
+        print("Processing proteing coding transcripts fasta file '%s'..." % pct)
+        p.process()
+
+        min_size = min([len(l.data), len(p.data)])
+
+        longs_data_training, longs_data_testing = section(l.data, min_size, args.fraction)
+        pcts_data_training, pcts_data_testing = section(p.data, min_size, args.fraction)
+
+        if training is None:
+            training = npy.hstack((longs_data_training, pcts_data_training))
+        else:
+            training = npy.hstack((training, npy.hstack((longs_data_training, pcts_data_training))))
+
+        if testing is None:
+            testing = npy.hstack((longs_data_testing, pcts_data_testing))
+        else:
+            testing = npy.hstack((testing, npy.hstack((longs_data_testing, pcts_data_testing))))
 
     pca = PCAAttributes(training)
     kmers = pca.attributes(args.kmers)
@@ -158,19 +181,21 @@ def create_model(args):
     x = testing_attributes.copy(npy.float_)
     testing_attributes = x.reshape(testing_attributes.shape + (-1,))
 
-    base_name = build_base_name(args.longs[0], args.pcts[0], args.kmers)
+    base_name = build_base_name(args.longs, args.pcts, args.kmers)
     grid_file_name = "%s.longdist.npy" % base_name
 
-    model_file = args.model_file if args.model_file  else "%s.plk" % base_name
+    model_file = args.model_file[0] if args.model_file else "%s.plk" % base_name
     model_config_file = "%s.conf" % model_file
-    csv_file = args.csv_file if args.csv_file   else "%s.csv" % base_name
-    roc_file = args.roc_file if args.roc_file   else "%s_roc.eps" % base_name
+    csv_file = args.csv_file[0] if args.csv_file else "%s.csv" % base_name
+    roc_file = args.roc_file[0] if args.roc_file else "%s_roc.eps" % base_name
 
     if os.path.exists(model_file):
+        print("Using pre-built model ...")
         clf = joblib.load(model_file)
     else:
         c, gamma = svm_model_selection(attributes, labels, args.cross_validation, args.log2c, args.log2g,
                                        args.processes, grid_file_name)
+        print("Building the model ...")
         clf = svm.SVC(kernel='rbf', C=c, gamma=gamma, probability=True)
         clf.fit(attributes, labels)
         joblib.dump(clf, model_file)
@@ -201,7 +226,8 @@ def create_model(args):
         args.model_config = [model_config_file]
 
     if args.purge:
-        purge([grid_file_name, longs.intermediate_file(), pcts.intermediate_file()])
+        purge([grid_file_name] + [file.intermediate_file() for file in longs] + [file.intermediate_file() for file in
+                                                                                 pcts])
 
     if args.input:
         predict(args)
@@ -210,6 +236,7 @@ def create_model(args):
 def purge(files):
     for f in files:
         os.remove(f)
+
 
 def roc(false_positive_rate, true_positive_rate, label, title, file_name):
     fig, ax = plt.subplots()
@@ -242,12 +269,12 @@ def accuracy_sensitivity_specificity(labels, probabilities):
 
     accuracy = metrics.accuracy_score(labels, pred)
     confusion_matrix = metrics.confusion_matrix(labels, pred)
-    TP = confusion_matrix[1, 1]
-    TN = confusion_matrix[0, 0]
-    FP = confusion_matrix[0, 1]
-    FN = confusion_matrix[1, 0]
-    sensitivity = float(TP) / float(FN + TP)
-    specificity = float(TN) / float(TN + FP)
+    tp = confusion_matrix[1, 1]
+    tn = confusion_matrix[0, 0]
+    fp = confusion_matrix[0, 1]
+    fn = confusion_matrix[1, 0]
+    sensitivity = float(tp) / float(fn + tp)
+    specificity = float(tn) / float(tn + fp)
 
     return accuracy, sensitivity, specificity
 
@@ -257,18 +284,28 @@ def dump_result_csv(ids, long_probabilities, pct_probabilities, file):
         fieldnames = ['sequence', 'pct %', 'lncRNA %']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
-        for (id, lp, pp) in zip(ids, long_probabilities, pct_probabilities):
-            writer.writerow({'sequence': id, 'pct %': pp, 'lncRNA %': lp})
+        for (ID, lp, pp) in zip(ids, long_probabilities, pct_probabilities):
+            writer.writerow({'sequence': ID, 'pct %': pp, 'lncRNA %': lp})
 
 
-def build_base_name(long_file, pct_file, kmers):
-    long_file_base = '.'.join(os.path.basename(long_file).split(sep='.')[:-1])
-    pct_file_base = '.'.join(os.path.basename(pct_file).split(sep='.')[:-1])
+def build_base_name(long_files, pct_files, kmers):
+    long_file_base = []
+    for long_file in long_files:
+        long_file_base.append('.'.join(os.path.basename(long_file).split(sep='.')[:-1]))
 
-    return os.path.join(os.path.split(long_file)[0], "%s_x_%s_%d" % (long_file_base, pct_file_base, kmers))
+    long_file_base = "_x_".join(long_file_base)
+
+    pct_file_base = []
+    for pct_file in pct_files:
+        pct_file_base.append('.'.join(os.path.basename(pct_file).split(sep='.')[:-1]))
+
+    pct_file_base = "_x_".join(pct_file_base)
+
+    return os.path.join(os.path.split(long_files[0])[0], "%s_x_%s_%d" % (long_file_base, pct_file_base, kmers))
 
 
 def svm_model_selection(attributes, labels, folds, log2c, log2g, processes, file_name):
+    print("Starting the SVM parameter seach ...")
     c_begin, c_end, c_step = map(int, log2c.split(','))
     g_begin, g_end, g_step = map(int, log2g.split(','))
 
