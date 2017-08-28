@@ -2,7 +2,7 @@
 
 ## Requirements
 
-Python 3, Tkinter and pip are required for running this tool. Also the the
+Python 3, Tkinter and pip are required for running this tool. Also, the the
 following packages will be installed during the installation process:
 - NumPy - ``pip install numpy``
 - Biopython - ``pip instal biopython``
@@ -17,8 +17,8 @@ These packages will be automatically installed during the installation process
 
 ```
 wget https://github.com/hugowschneider/longdist/archive/v1.0.0.tar.gz
-tar zxvf v1.0.0.tar.gz
-cd longdist-1.0.0
+tar zxvf v1.1.0.tar.gz
+cd longdist-1.1.0
 pip install .
 ```
 
@@ -27,7 +27,20 @@ and ``PATH`` environment variables correctly.
 
 ## Usage
 ```
-Method implementation for long ncRNAs and PCT distinction. This
+usage: longdist.py [-h] [--citation] [--version]
+                   [--longs <longs1.fa longs2.fa ...> [<longs1.fa longs2.fa ...> ...]]
+                   [--pcts <pcts1.fa pcts2.fa ...> [<pcts1.fa pcts2.fa ...> ...]]
+                   [--input <input.fa>] [--kmers <50>] [--orf <1>]
+                   [--ratio <0.75>] [--size <200>] [--cv <10>]
+                   [--log2c <-5,15,2>] [--log2g <3,-15,-2>] [--processes <5>]
+                   [--out_roc <"lncRNA file"x"PCT file"x"kmers"_roc.eps>]
+                   [--out_csv <"lncRNA file"x"PCT file"x"kmers".csv>]
+                   [--out_model <"lncRNA file"x"PCT file"x"kmers".plk>]
+                   [--predict]
+                   [--model_config <"lncRNA file"x"PCT file"x"kmers".plk>]
+                   [--out <"Input File".csv>] [--purge]
+
+longdist: Method implementation for long ncRNAs and PCT distinction. This
 application can create and use models base on the method by Schneider et al
 (2017).
 
@@ -37,14 +50,23 @@ optional arguments:
   --version             Prints version number.
 
 Method Paramenters:
-  --longs <longs.fa>    Fasta file containing only long non-coding RNAs. This
-                        argument is required.
-  --pcts <pcts.fa>      Fasta file containing only protein coding transcripts.
+  --longs <longs1.fa longs2.fa ...> [<longs1.fa longs2.fa ...> ...]
+                        List of fasta files containing long non-coding RNAs.
+                        The files should the separated by spaces and should be
+                        ordered by species in same order as the pct file list.
                         This argument is required.
+  --pcts <pcts1.fa pcts2.fa ...> [<pcts1.fa pcts2.fa ...> ...]
+                        List of fasta files containing protein coding
+                        transcripts. The files should the separated by spaces
+                        and should be ordered by species in same order as the
+                        lcnRNA file list. This argument is required.
   --input <input.fa>    Fasta file containing transcripts to predict with the
                         model
   --kmers <50>          Number of nucleotide pattern frequencies to consider
                         in the model. Default is 50.
+  --orf <1>             The orf feature to be used by the model. Default is 1.
+                        Possible values are: 0 - No orf feature; 1 - First ORF
+                        relative length; 2 - Longest ORF relative length
   --ratio <0.75>        The ratio of whole dataset that should be used for
                         training. Default is 0.75.
   --size <200>          Mininum sequence size to consider. Default is 200.

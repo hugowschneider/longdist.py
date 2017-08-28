@@ -44,6 +44,10 @@ def main():
     group.add_argument('--kmers', nargs=1, metavar='<50>', default=50, type=int, dest='kmers',
                        help='Number of nucleotide pattern frequencies to consider in the model. Default is 50.')
 
+    group.add_argument('--orf', nargs=1, metavar='<1>', default=[1], type=int, dest='orf',
+                       help='The orf feature to be used by the model. Default is 1. Possible values are: 0 - No '
+                            'orf feature; 1 - First ORF relative length; 2 - Longest ORF relative length')
+
     group.add_argument('--ratio', nargs=1, metavar='<0.75>', default=0.75, type=float, dest='fraction',
                        help='The ratio of whole dataset that should be used for training. Default is 0.75.')
 
@@ -133,6 +137,21 @@ def predict(args):
         purge([fasta_input.intermediate_file()])
 
 
+def features(args, kmers):
+    if args.orf:
+        if args.orf[0] == 0:
+            return npy.array(kmers)
+        elif args.orf[0] == 1:
+            return npy.array(["fp"] + kmers)
+        elif args.orf[0] == 2:
+            return npy.array(["lp"] + kmers)
+        else:
+            print("Invalid value parameter ORF.")
+            exit(1)
+    else:
+        return npy.array(["fp"] + kmers)
+
+
 def create_model(args):
     longs = []
     pcts = []
@@ -171,17 +190,19 @@ def create_model(args):
     pca = PCAAttributes(training)
     kmers = pca.attributes(args.kmers)
 
+    f = features(args, kmers)
+
     labels = training["class"]
-    attributes = training[npy.array(["fp"] + kmers)]
+    attributes = training[f]
     x = attributes.copy(npy.float_)
     attributes = x.reshape(attributes.shape + (-1,))
 
     testing_labels = testing["class"]
-    testing_attributes = testing[npy.array(["fp"] + kmers)]
+    testing_attributes = testing[f]
     x = testing_attributes.copy(npy.float_)
     testing_attributes = x.reshape(testing_attributes.shape + (-1,))
 
-    base_name = build_base_name(args.longs, args.pcts, args.kmers)
+    base_name = build_base_name(args.longs, args.pcts, args.kmers, args.orf[0])
     grid_file_name = "%s.longdist.npy" % base_name
 
     model_file = args.model_file[0] if args.model_file else "%s.plk" % base_name
@@ -217,7 +238,7 @@ def create_model(args):
     config['MODEL'] = {
         'desc': "Model built with lncRNA data from '%s' and PCT data from '%s'" % (
             os.path.basename(args.longs[0]), os.path.basename(args.pcts[0])),
-        'attributes': ['fp'] + kmers,
+        'attributes': npy.asarray(f),
         'model': os.path.relpath(model_file, os.path.split(model_config_file)[0])
     }
 
@@ -288,7 +309,7 @@ def dump_result_csv(ids, long_probabilities, pct_probabilities, file):
             writer.writerow({'sequence': ID, 'pct %': pp, 'lncRNA %': lp})
 
 
-def build_base_name(long_files, pct_files, kmers):
+def build_base_name(long_files, pct_files, kmers, orf):
     long_file_base = []
     for long_file in long_files:
         long_file_base.append('.'.join(os.path.basename(long_file).split(sep='.')[:-1]))
@@ -301,7 +322,8 @@ def build_base_name(long_files, pct_files, kmers):
 
     pct_file_base = "_x_".join(pct_file_base)
 
-    return os.path.join(os.path.split(long_files[0])[0], "%s_x_%s_%d" % (long_file_base, pct_file_base, kmers))
+    return os.path.join(os.path.split(long_files[0])[0],
+                        "%s_x_%s_%d_orf%d" % (long_file_base, pct_file_base, kmers, orf))
 
 
 def svm_model_selection(attributes, labels, folds, log2c, log2g, processes, file_name):
