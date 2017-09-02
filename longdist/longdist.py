@@ -160,6 +160,7 @@ def create_model(args):
 
     training = None
     testing = None
+    pca = None
 
     for (long, pct) in zip(args.longs, args.pcts):
         l = SequenceAttributes(input_file=long, size=args.size, clazz=1)
@@ -175,6 +176,11 @@ def create_model(args):
 
         min_size = min([len(l.data), len(p.data)])
 
+        if pca is None:
+            pca = npy.hstack((l.data, p.data))
+        else:
+            pca = npy.hstack((pca, npy.hstack((l.data, p.data))))
+
         longs_data_training, longs_data_testing = section(l.data, min_size, args.fraction)
         pcts_data_training, pcts_data_testing = section(p.data, min_size, args.fraction)
 
@@ -188,7 +194,7 @@ def create_model(args):
         else:
             testing = npy.hstack((testing, npy.hstack((longs_data_testing, pcts_data_testing))))
 
-    pca = PCAAttributes(data=npy.hstack((training, testing)), patterns=SequenceAttributes.ALL_PATTERNS)
+    pca = PCAAttributes(data=pca, patterns=SequenceAttributes.ALL_PATTERNS)
     kmers = pca.attributes(args.kmers)
 
     f = features(args, kmers)
@@ -380,7 +386,6 @@ def create_classifier(c, gamma, verbose=False, shrinking=True, probability=True)
 
 
 def cross_validation(c, gamma, attributes, labels, folds):
-
     clf = create_classifier(c=c, gamma=gamma, shrinking=False, probability=False)
     scores = cross_val_score(clf, attributes, labels, cv=folds)
 

@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import mean, cov, linalg
 
+
 class PCAAttributes:
     def __init__(self, data, patterns):
         self.data = data
