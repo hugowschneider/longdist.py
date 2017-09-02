@@ -1,12 +1,10 @@
 import numpy as np
 from numpy import mean, cov, linalg
-from .sequence_attributes import SequenceAttributes
-
 
 class PCAAttributes:
-    def __init__(self, data):
+    def __init__(self, data, patterns):
         self.data = data
-        self.patterns = [pattern for pattern in SequenceAttributes.ALL_PATTERNS if
+        self.patterns = [pattern for pattern in patterns if
                          pattern not in ["fl", "fp", "ll", "lp"]]
 
     def __calc_pca(self):

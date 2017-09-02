@@ -350,6 +350,93 @@ class SequenceAttributes:
         "tttt"
     ]
 
+    DI_TRI_PATTERNS = [
+        "fl",
+        "fp",
+        "ll",
+        "lp",
+        "aa",
+        "ac",
+        "ag",
+        "at",
+        "ca",
+        "cc",
+        "cg",
+        "ct",
+        "ga",
+        "gc",
+        "gg",
+        "gt",
+        "ta",
+        "tc",
+        "tg",
+        "tt",
+        "aaa",
+        "aac",
+        "aag",
+        "aat",
+        "aca",
+        "acc",
+        "acg",
+        "act",
+        "aga",
+        "agc",
+        "agg",
+        "agt",
+        "ata",
+        "atc",
+        "atg",
+        "att",
+        "caa",
+        "cac",
+        "cag",
+        "cat",
+        "cca",
+        "ccc",
+        "ccg",
+        "cct",
+        "cga",
+        "cgc",
+        "cgg",
+        "cgt",
+        "cta",
+        "ctc",
+        "ctg",
+        "ctt",
+        "gaa",
+        "gac",
+        "gag",
+        "gat",
+        "gca",
+        "gcc",
+        "gcg",
+        "gct",
+        "gga",
+        "ggc",
+        "ggg",
+        "ggt",
+        "gta",
+        "gtc",
+        "gtg",
+        "gtt",
+        "taa",
+        "tac",
+        "tag",
+        "tat",
+        "tca",
+        "tcc",
+        "tcg",
+        "tct",
+        "tga",
+        "tgc",
+        "tgg",
+        "tgt",
+        "tta",
+        "ttc",
+        "ttg",
+        "ttt"
+    ]
+
     def __init__(self, input_file, size, clazz, use_intermediate_file=True):
         self.fasta_file = input_file
         self.size = size
@@ -372,7 +459,7 @@ class SequenceAttributes:
                     data.append(self.attributes(record, self.clazz, patterns))
 
         dt = np.dtype(
-            [("id", np.str_, 32), ("class", np.int_), ("length", np.int_)] + [(pattern, np.float_) for pattern in
+            [("id", np.str_, 32), ("class", np.int_), ("length", np.int_)] + [(pattern, np.float64) for pattern in
                                                                               patterns])
         self.data = np.asarray(np.array(data, dtype=dt))
         if self.use_intermediate_file:
@@ -432,12 +519,6 @@ class SequenceAttributes:
             return 0
         else:
             return max(sizes)
-
-    def save_csv(self):
-        with open('foo.csv', 'wb') as file:
-            header = ','.join(["id", 'class', 'length'] + self.ALL_PATTERNS) + "\n"
-            file.write(bytes(header, "UTF-8"))
-            np.savetxt(file, self.data, delimiter=",", fmt='%s,%d,%d,' + ','.join(['%.18e'] * len(self.ALL_PATTERNS)))
 
     def orf_size(self, start, seq):
         for end in [m.start() for m in re.finditer("taa|tga|tag", seq, re.IGNORECASE)]:

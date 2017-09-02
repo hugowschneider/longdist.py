@@ -56,10 +56,10 @@ def main():
     group.add_argument('--cv', nargs=1, metavar='<10>', default=10, type=int, dest='cross_validation',
                        help='Number of folds in cross-validation. Default is 10.')
 
-    group.add_argument('--log2c', nargs=1, metavar='<-5,15,2>', default="-5,15,2",
+    group.add_argument('--log2c', nargs=1, metavar='<-5,15,2>', default=["-5,15,2"],
                        help='Set the range of c to 2^{begin,...,begin+k*step,...,end}. Default is -5,15,2.')
 
-    group.add_argument('--log2g', nargs=1, metavar='<3,-15,-2>', default="3,-15,-2",
+    group.add_argument('--log2g', nargs=1, metavar='<3,-15,-2>', default=["3,-15,-2"],
                        help='Set the range of g to 2^{begin,...,begin+k*step,...,end}. Default is 3,-15,-2.')
 
     group.add_argument('--processes', nargs=1, metavar='<5>', default=4, type=int,
@@ -120,12 +120,13 @@ def predict(args):
     config = configparser.ConfigParser()
     config.read(args.model_config[0])
     kmers = eval(config['MODEL']['attributes'])
-    fasta_input = SequenceAttributes(input_file=args.input[0], size=args.size, clazz=-1, use_intermediate_file=False)
+    fasta_input = SequenceAttributes(input_file=args.input[0], size=args.size, clazz=-1)
     fasta_input.process(kmers)
 
     clf = joblib.load(os.path.join(os.path.split(args.model_config[0])[0], config['MODEL']['model']))
 
-    x = fasta_input.data[npy.array(kmers)].copy(npy.float_).reshape(fasta_input.data.shape + (-1,))
+    x = fasta_input.data[npy.array(kmers)]
+    x = npy.array([list(l) for l in x])
 
     probabilities = clf.predict_proba(x)
 
@@ -187,15 +188,15 @@ def create_model(args):
         else:
             testing = npy.hstack((testing, npy.hstack((longs_data_testing, pcts_data_testing))))
 
-    pca = PCAAttributes(training)
+    pca = PCAAttributes(data=npy.hstack((training, testing)), patterns=SequenceAttributes.ALL_PATTERNS)
     kmers = pca.attributes(args.kmers)
 
     f = features(args, kmers)
 
+    print("Selected features are: %s" % f)
+
     labels = training["class"]
-    attributes = training[f]
-    x = attributes.copy(npy.float_)
-    attributes = x.reshape(attributes.shape + (-1,))
+    attributes = npy.array([list(l) for l in training[f]])
 
     testing_labels = testing["class"]
     testing_attributes = testing[f]
@@ -217,9 +218,21 @@ def create_model(args):
         c, gamma = svm_model_selection(attributes, labels, args.cross_validation, args.log2c, args.log2g,
                                        args.processes, grid_file_name)
         print("Building the model ...")
-        clf = svm.SVC(kernel='rbf', C=c, gamma=gamma, probability=True)
+        clf = create_classifier(c=c, gamma=gamma)
         clf.fit(attributes, labels)
         joblib.dump(clf, model_file)
+
+        config = configparser.ConfigParser()
+        config['MODEL'] = {
+            'desc': "Model built with lncRNA data from '%s' and PCT data from '%s'" % (
+                os.path.basename(args.longs[0]), os.path.basename(args.pcts[0])),
+            'attributes': npy.asarray(f),
+            'model': os.path.relpath(model_file, os.path.split(model_config_file)[0])
+        }
+
+        with open(model_config_file, 'w') as config_file:
+            config.write(config_file)
+            args.model_config = [model_config_file]
 
     probabilities = clf.predict_proba(testing_attributes)
     long_probabilities = probabilities[:, 1]
@@ -233,18 +246,6 @@ def create_model(args):
         "%s x %s\nAccuracy: %.2f%% | Sensitivity: %.2f%% | Specificity: %.2f%%" % (
             os.path.basename(args.longs[0]), os.path.basename(args.pcts[0]), 100 * accuracy, 100 * sensitivity,
             100 * specificity), roc_file)
-
-    config = configparser.ConfigParser()
-    config['MODEL'] = {
-        'desc': "Model built with lncRNA data from '%s' and PCT data from '%s'" % (
-            os.path.basename(args.longs[0]), os.path.basename(args.pcts[0])),
-        'attributes': npy.asarray(f),
-        'model': os.path.relpath(model_file, os.path.split(model_config_file)[0])
-    }
-
-    with open(model_config_file, 'w') as config_file:
-        config.write(config_file)
-        args.model_config = [model_config_file]
 
     if args.purge:
         purge([grid_file_name] + [file.intermediate_file() for file in longs] + [file.intermediate_file() for file in
@@ -294,8 +295,8 @@ def accuracy_sensitivity_specificity(labels, probabilities):
     tn = confusion_matrix[0, 0]
     fp = confusion_matrix[0, 1]
     fn = confusion_matrix[1, 0]
-    sensitivity = float(tp) / float(fn + tp)
-    specificity = float(tn) / float(tn + fp)
+    sensitivity = float(tp) / (float(fn + tp) if float(fn + tp) > 0 else -1)
+    specificity = float(tn) / (float(tn + fp) if float(tn + fp) > 0 else -1)
 
     return accuracy, sensitivity, specificity
 
@@ -327,14 +328,14 @@ def build_base_name(long_files, pct_files, kmers, orf):
 
 
 def svm_model_selection(attributes, labels, folds, log2c, log2g, processes, file_name):
-    print("Starting the SVM parameter seach ...")
-    c_begin, c_end, c_step = map(int, log2c.split(','))
-    g_begin, g_end, g_step = map(int, log2g.split(','))
+    print("Starting the SVM parameter search ...")
+    c_begin, c_end, c_step = map(int, log2c[0].split(','))
+    g_begin, g_end, g_step = map(int, log2g[0].split(','))
 
     pool = Pool(processes)
 
     if os.path.exists(file_name):
-        results = npy.asarray(npy.load(file_name))
+        results = npy.load(file_name).tolist()
     else:
         results = []
 
@@ -373,8 +374,14 @@ def svm_model_selection(attributes, labels, folds, log2c, log2g, processes, file
     return c, gamma
 
 
+def create_classifier(c, gamma, verbose=False, shrinking=True, probability=True):
+    return svm.SVC(kernel='rbf', C=c, gamma=gamma, decision_function_shape='ovr', max_iter=-1, tol=0.001,
+                   verbose=verbose, shrinking=shrinking, probability=probability)
+
+
 def cross_validation(c, gamma, attributes, labels, folds):
-    clf = svm.SVC(kernel='rbf', C=c, gamma=gamma)
+
+    clf = create_classifier(c=c, gamma=gamma, shrinking=False, probability=False)
     scores = cross_val_score(clf, attributes, labels, cv=folds)
 
     return [c, gamma, npy.max(scores)]
