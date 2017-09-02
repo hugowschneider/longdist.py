@@ -9,8 +9,7 @@ class PCAAttributes:
                          pattern not in ["fl", "fp", "ll", "lp"]]
 
     def __calc_pca(self):
-        data = [self.data[pattern] for pattern in self.patterns]
-        data = np.vstack(tuple(data)).T
+        data = np.array([list(r) for r in self.data[self.patterns]])
 
         self.loadings, self.eigenvalues = self.princomp(data)
 

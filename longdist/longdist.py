@@ -62,8 +62,8 @@ def main():
     group.add_argument('--log2g', nargs=1, metavar='<3,-15,-2>', default=["3,-15,-2"],
                        help='Set the range of g to 2^{begin,...,begin+k*step,...,end}. Default is 3,-15,-2.')
 
-    group.add_argument('--processes', nargs=1, metavar='<5>', default=4, type=int,
-                       help='Number of parallel processes for parameters search. Default is 4.')
+    group.add_argument('--processes', nargs=1, metavar='<5>', default=1, type=int,
+                       help='Number of parallel processes for parameters search. Default is 1.')
 
     group.add_argument('--out_roc', nargs=1, metavar='<"lncRNA file"x"PCT file"x"kmers"_roc.eps>', dest='roc_file',
                        help='Name of the output file for the roc Curve. Default is roc.eps.')
@@ -120,7 +120,7 @@ def predict(args):
     config = configparser.ConfigParser()
     config.read(args.model_config[0])
     kmers = eval(config['MODEL']['attributes'])
-    fasta_input = SequenceAttributes(input_file=args.input[0], size=args.size, clazz=-1)
+    fasta_input = SequenceAttributes(input_file=args.input[0], size=args.size, clazz=-1, use_intermediate_file=False)
     fasta_input.process(kmers)
 
     clf = joblib.load(os.path.join(os.path.split(args.model_config[0])[0], config['MODEL']['model']))
