@@ -17,8 +17,8 @@ These packages will be automatically installed during the installation process
 
 ```
 wget https://github.com/hugowschneider/longdist.py/archive/v1.0.0.tar.gz
-tar zxvf v1.1.0.tar.gz
-cd longdist-1.1.0
+tar zxvf v1.0.1.tar.gz
+cd longdist-1.0.1
 pip install .
 ```
 
