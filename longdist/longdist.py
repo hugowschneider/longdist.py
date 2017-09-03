@@ -20,7 +20,7 @@ from sklearn.externals import joblib
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 
 def main():
