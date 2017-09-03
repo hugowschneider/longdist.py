@@ -62,7 +62,7 @@ def main():
     group.add_argument('--log2g', nargs=1, metavar='<3,-15,-2>', default=["3,-15,-2"],
                        help='Set the range of g to 2^{begin,...,begin+k*step,...,end}. Default is 3,-15,-2.')
 
-    group.add_argument('--processes', nargs=1, metavar='<5>', default=1, type=int,
+    group.add_argument('--processes', nargs=1, metavar='<1>', default=1, type=int,
                        help='Number of parallel processes for parameters search. Default is 1.')
 
     group.add_argument('--out_roc', nargs=1, metavar='<"lncRNA file"x"PCT file"x"kmers"_roc.eps>', dest='roc_file',
@@ -205,9 +205,7 @@ def create_model(args):
     attributes = npy.array([list(l) for l in training[f]])
 
     testing_labels = testing["class"]
-    testing_attributes = testing[f]
-    x = testing_attributes.copy(npy.float_)
-    testing_attributes = x.reshape(testing_attributes.shape + (-1,))
+    testing_attributes = npy.array([list(l) for l in testing[f]])
 
     base_name = build_base_name(args.longs, args.pcts, args.kmers, args.orf[0])
     grid_file_name = "%s.longdist.npy" % base_name
