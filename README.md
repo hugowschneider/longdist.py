@@ -2,7 +2,7 @@
 
 ## Requirements
 
-Python 3, Tkinter and pip are required for running this tool. Also, the the
+Python 3, Tkinter and pip are required for running this tool. Also, the
 following packages will be installed during the installation process:
 - NumPy - ``pip install numpy``
 - Biopython - ``pip instal biopython``
