@@ -20,7 +20,7 @@ from sklearn.externals import joblib
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 
 def main():
@@ -41,19 +41,19 @@ def main():
     group.add_argument('--input', nargs=1, metavar='<input.fa>', dest='input',
                        help='Fasta file containing transcripts to predict with the model')
 
-    group.add_argument('--kmers', nargs=1, metavar='<50>', default=50, type=int, dest='kmers',
+    group.add_argument('--kmers', nargs=1, metavar='<50>', default=[50], type=int, dest='kmers',
                        help='Number of nucleotide pattern frequencies to consider in the model. Default is 50.')
 
     group.add_argument('--orf', nargs=1, metavar='<1>', default=[1], type=int, dest='orf',
                        help='The orf feature to be used by the model. Default is 1. Possible values are: 0 - No '
                             'orf feature; 1 - First ORF relative length; 2 - Longest ORF relative length')
 
-    group.add_argument('--ratio', nargs=1, metavar='<0.75>', default=0.75, type=float, dest='fraction',
+    group.add_argument('--ratio', nargs=1, metavar='<0.75>', default=[0.75], type=float, dest='fraction',
                        help='The ratio of whole dataset that should be used for training. Default is 0.75.')
 
-    group.add_argument('--size', nargs=1, metavar='<200>', default=200, type=int, dest='size',
-                       help='Mininum sequence size to consider. Default is 200.')
-    group.add_argument('--cv', nargs=1, metavar='<10>', default=10, type=int, dest='cross_validation',
+    group.add_argument('--size', nargs=1, metavar='<200>', default=[200], type=int, dest='size',
+                       help='Minimum sequence size to consider. Default is 200.')
+    group.add_argument('--cv', nargs=1, metavar='<10>', default=[10], type=int, dest='cross_validation',
                        help='Number of folds in cross-validation. Default is 10.')
 
     group.add_argument('--log2c', nargs=1, metavar='<-5,15,2>', default=["-5,15,2"],
@@ -62,19 +62,19 @@ def main():
     group.add_argument('--log2g', nargs=1, metavar='<3,-15,-2>', default=["3,-15,-2"],
                        help='Set the range of g to 2^{begin,...,begin+k*step,...,end}. Default is 3,-15,-2.')
 
-    group.add_argument('--processes', nargs=1, metavar='<1>', default=1, type=int,
+    group.add_argument('--processes', nargs=1, metavar='<1>', default=[1], type=int,
                        help='Number of parallel processes for parameters search. Default is 1.')
 
     group.add_argument('--out_roc', nargs=1, metavar='<"lncRNA file"x"PCT file"x"kmers"_roc.eps>', dest='roc_file',
                        help='Name of the output file for the roc Curve. Default is roc.eps.')
 
     group.add_argument('--out_csv', nargs=1, metavar='<"lncRNA file"x"PCT file"x"kmers".csv>', dest='csv_file',
-                       help='Name of the output CSV file containg the results. Default is a name built from the names '
+                       help='Name of the output CSV file containing the results. Default is a name built from the names '
                             'of both fasta files.')
 
     group.add_argument('--out_model', nargs=1, metavar='<"lncRNA file"x"PCT file"x"kmers".plk>',
                        dest='model_file',
-                       help='Name of the output file containg the SVM Model. Default is a name built from the names '
+                       help='Name of the output file containing the SVM Model. Default is a name built from the names '
                             'of both fasta files.')
 
     group.add_argument('--predict', action="store_true",
@@ -82,7 +82,7 @@ def main():
 
     group.add_argument('--model_config', nargs=1, metavar='<"lncRNA file"x"PCT file"x"kmers".plk>',
                        dest='model_config',
-                       help='The file name containg the model configuration properties for prediction.')
+                       help='The file name containing the model configuration properties for prediction.')
 
     group.add_argument('--out', nargs=1, metavar='<"Input File".csv>',
                        dest='output',
@@ -120,7 +120,7 @@ def predict(args):
     config = configparser.ConfigParser()
     config.read(args.model_config[0])
     kmers = eval(config['MODEL']['attributes'])
-    fasta_input = SequenceAttributes(input_file=args.input[0], size=args.size, clazz=-1, use_intermediate_file=False)
+    fasta_input = SequenceAttributes(input_file=args.input[0], size=args.size[0], clazz=-1, use_intermediate_file=False)
     fasta_input.process(kmers)
 
     clf = joblib.load(os.path.join(os.path.split(args.model_config[0])[0], config['MODEL']['model']))
@@ -181,8 +181,8 @@ def create_model(args):
         else:
             pca = npy.hstack((pca, npy.hstack((l.data, p.data))))
 
-        longs_data_training, longs_data_testing = section(l.data, min_size, args.fraction)
-        pcts_data_training, pcts_data_testing = section(p.data, min_size, args.fraction)
+        longs_data_training, longs_data_testing = section(l.data, min_size, args.fraction[0])
+        pcts_data_training, pcts_data_testing = section(p.data, min_size, args.fraction[0])
 
         if training is None:
             training = npy.hstack((longs_data_training, pcts_data_training))
@@ -195,7 +195,7 @@ def create_model(args):
             testing = npy.hstack((testing, npy.hstack((longs_data_testing, pcts_data_testing))))
 
     pca = PCAAttributes(data=pca, patterns=SequenceAttributes.ALL_PATTERNS)
-    kmers = pca.attributes(args.kmers)
+    kmers = pca.attributes(args.kmers[0])
 
     f = features(args, kmers)
 
@@ -207,7 +207,7 @@ def create_model(args):
     testing_labels = testing["class"]
     testing_attributes = npy.array([list(l) for l in testing[f]])
 
-    base_name = build_base_name(args.longs, args.pcts, args.kmers, args.orf[0])
+    base_name = build_base_name(args.longs, args.pcts, args.kmers[0], args.orf[0])
     grid_file_name = "%s.longdist.npy" % base_name
 
     model_file = args.model_file[0] if args.model_file else "%s.plk" % base_name
@@ -219,8 +219,8 @@ def create_model(args):
         print("Using pre-built model ...")
         clf = joblib.load(model_file)
     else:
-        c, gamma = svm_model_selection(attributes, labels, args.cross_validation, args.log2c, args.log2g,
-                                       args.processes, grid_file_name)
+        c, gamma = svm_model_selection(attributes, labels, args.cross_validation[0], args.log2c, args.log2g,
+                                       args.processes[0], grid_file_name)
         print("Building the model ...")
         clf = create_classifier(c=c, gamma=gamma)
         clf.fit(attributes, labels)

@@ -13,13 +13,13 @@ following packages will be installed during the installation process:
 
 These packages will be automatically installed during the installation process
 
-## Instalation
+## Installation
 
 ```
-wget https://github.com/hugowschneider/longdist.py/archive/v1.0.1.tar.gz
-tar zxvf v1.0.1.tar.gz
-cd longdist.py-1.0.1
-pip install .
+wget https://github.com/hugowschneider/longdist.py/archive/v1.0.2.tar.gz
+tar zxvf v1.0.2.tar.gz
+cd longdist.py-1.0.2
+pip3 install .
 ```
 
 If you install these package in a local repository, please remember to set the ``PYTHONPATH``
@@ -32,7 +32,7 @@ usage: longdist.py [-h] [--citation] [--version]
                    [--pcts <pcts1.fa pcts2.fa ...> [<pcts1.fa pcts2.fa ...> ...]]
                    [--input <input.fa>] [--kmers <50>] [--orf <1>]
                    [--ratio <0.75>] [--size <200>] [--cv <10>]
-                   [--log2c <-5,15,2>] [--log2g <3,-15,-2>] [--processes <5>]
+                   [--log2c <-5,15,2>] [--log2g <3,-15,-2>] [--processes <1>]
                    [--out_roc <"lncRNA file"x"PCT file"x"kmers"_roc.eps>]
                    [--out_csv <"lncRNA file"x"PCT file"x"kmers".csv>]
                    [--out_model <"lncRNA file"x"PCT file"x"kmers".plk>]
@@ -69,7 +69,7 @@ Method Paramenters:
                         relative length; 2 - Longest ORF relative length
   --ratio <0.75>        The ratio of whole dataset that should be used for
                         training. Default is 0.75.
-  --size <200>          Mininum sequence size to consider. Default is 200.
+  --size <200>          Minimum sequence size to consider. Default is 200.
   --cv <10>             Number of folds in cross-validation. Default is 10.
   --log2c <-5,15,2>     Set the range of c to
                         2^{begin,...,begin+k*step,...,end}. Default is
@@ -77,23 +77,23 @@ Method Paramenters:
   --log2g <3,-15,-2>    Set the range of g to
                         2^{begin,...,begin+k*step,...,end}. Default is
                         3,-15,-2.
-  --processes <5>       Number of parallel processes for parameters search.
-                        Default is 4.
+  --processes <1>       Number of parallel processes for parameters search.
+                        Default is 1.
   --out_roc <"lncRNA file"x"PCT file"x"kmers"_roc.eps>
                         Name of the output file for the roc Curve. Default is
                         roc.eps.
   --out_csv <"lncRNA file"x"PCT file"x"kmers".csv>
-                        Name of the output CSV file containg the results.
+                        Name of the output CSV file containing the results.
                         Default is a name built from the names of both fasta
                         files.
   --out_model <"lncRNA file"x"PCT file"x"kmers".plk>
-                        Name of the output file containg the SVM Model.
+                        Name of the output file containing the SVM Model.
                         Default is a name built from the names of both fasta
                         files.
   --predict             Just use a predefined model to distinguish long ncRNAs
                         and PCTs in the input fasta file
   --model_config <"lncRNA file"x"PCT file"x"kmers".plk>
-                        The file name containg the model configuration
+                        The file name containing the model configuration
                         properties for prediction.
   --out <"Input File".csv>
                         The output CSV file for the result of the distinction
@@ -103,7 +103,6 @@ Method Paramenters:
                         are used to accelerate consecutive runs of the method.
                         Don't purge them if you want to run this method a
                         second time with the same data
-
 ```
 ### Building Models
 
