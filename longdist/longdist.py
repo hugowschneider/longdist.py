@@ -20,7 +20,7 @@ from sklearn.externals import joblib
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 
 def main():
@@ -162,9 +162,13 @@ def create_model(args):
     testing = None
     pca = None
 
+    if args.longs == args.pcts:
+        print("Is not allowed to input the same list of files for lncRNAs and PCTs.")
+        exit(1)
+
     for (long, pct) in zip(args.longs, args.pcts):
-        l = SequenceAttributes(input_file=long, size=args.size, clazz=1)
-        p = SequenceAttributes(input_file=pct, size=args.size, clazz=0)
+        l = SequenceAttributes(input_file=long, size=args.size[0], clazz=1)
+        p = SequenceAttributes(input_file=pct, size=args.size[0], clazz=0)
 
         longs.append(l)
         pcts.append(p)

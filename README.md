@@ -16,9 +16,9 @@ These packages will be automatically installed during the installation process
 ## Installation
 
 ```
-wget https://github.com/hugowschneider/longdist.py/archive/v1.0.2.tar.gz
-tar zxvf v1.0.2.tar.gz
-cd longdist.py-1.0.2
+wget https://github.com/hugowschneider/longdist.py/archive/v1.0.3.tar.gz
+tar zxvf v1.0.3.tar.gz
+cd longdist.py-1.0.3
 pip3 install .
 ```
 
