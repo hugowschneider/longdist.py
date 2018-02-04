@@ -3,6 +3,7 @@
 """longdist.longdist: provides entry point main()."""
 
 import os
+import re
 import csv
 import numpy as npy
 import configparser
@@ -117,9 +118,15 @@ def main():
 
 
 def predict(args):
+    if not os.path.isfile(args.model_config[0]):
+        print("Invalid model configuration file.")
+        exit(1)
+
     config = configparser.ConfigParser()
     config.read(args.model_config[0])
-    kmers = eval(config['MODEL']['attributes'])
+    kmers = config['MODEL']['attributes']
+    kmers = re.sub("'\s+'", "', '", kmers) # wrong list format
+    kmers = eval(kmers)
     fasta_input = SequenceAttributes(input_file=args.input[0], size=args.size[0], clazz=-1, use_intermediate_file=False)
     fasta_input.process(kmers)
 
