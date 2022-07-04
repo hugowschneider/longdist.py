@@ -16,8 +16,8 @@ from sklearn.model_selection import cross_val_score
 from .pca_attributes import PCAAttributes
 from multiprocessing import Pool
 from math import floor
+import joblib
 from sklearn import metrics
-from sklearn.externals import joblib
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 
